@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>9th Grade English Literary Terms Matching Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        canvas {
+            border: 2px solid #333;
+            background-color: #fff;
+        }
+        #feedback {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #restart {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        #restart:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div id="feedback"></div>
+    <button id="restart" onclick="resetGame()">Restart Game</button>
+    <script>
+        // Define terms and definitions with a unique identifier to track correct pairings
+        let termPairs = [
+            { id: 1, term: "Metaphor", definition: "A figure of speech comparing two unlike things without using 'like' or 'as'." },
+            { id: 2, term: "Simile", definition: "A comparison using 'like' or 'as'." },
+            { id: 3, term: "Alliteration", definition: "Repetition of initial consonant sounds in close proximity." },
+            { id: 4, term: "Personification", definition: "Giving human characteristics to non-human entities." },
+            { id: 5, term: "Theme", definition: "The central idea or message in a literary work." },
+            { id: 6, term: "Irony", definition: "A contrast between expectation and reality." },
+            { id: 7, term: "Symbolism", definition: "Using an object or action to represent something beyond itself." },
+            { id: 8, term: "Foreshadowing", definition: "Hints or clues about future events in a story." },
+            { id: 9, term: "Protagonist", definition: "The main character in a story." },
+            { id: 10, term: "Antagonist", definition: "The character or force opposing the protagonist." },
+            { id: 11, term: "Imagery", definition: "Vivid descriptive language appealing to the senses." },
+            { id: 12, term: "Tone", definition: "The author's attitude toward the subject or audience." },
+            { id: 13, term: "Mood", definition: "The emotional atmosphere created by a literary work." },
+            { id: 14, term: "Allusion", definition: "A reference to another work, person, or event." },
+            { id: 15, term: "Conflict", definition: "A struggle between opposing forces in a story." }
+        ];
+        
+        let termsList = [];
+        let definitionsList = [];
+        let connections = [];
+        let selectedTerm = null;
+        let correctPairs = [];
+        let matchedPairs = 0;
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function shuffleWithNoAlignment() {
+            let aligned;
+            do {
+                // Initialize arrays
+                termsList = termPairs.map(pair => ({ id: pair.id, term: pair.term }));
+                definitionsList = termPairs.map(pair => ({ id: pair.id, definition: pair.definition }));
+                // Shuffle independently
+                shuffle(termsList);
+                shuffle(definitionsList);
+                // Check if any term is directly across from its definition
+                aligned = termsList.some((term, index) => term.id === definitionsList[index].id);
+            } while (aligned); // Repeat until no term is aligned with its definition
+        }
+
+        function setup() {
+            createCanvas(800, 600);
+            shuffleWithNoAlignment(); // Shuffle terms and definitions with no alignment
+            textAlign(LEFT, CENTER);
+            textSize(14);
+        }
+
+        function draw() {
+            background(255);
+            // Draw terms on the left
+            for (let i = 0; i < termsList.length; i++) {
+                let y = 50 + i * 35;
+                // Set text color to green if part of a correct pair, black otherwise
+                fill(correctPairs.some(pair => pair.term === i) ? [0, 255, 0] : [0, 0, 0]);
+                ellipse(50, y, 10, 10);
+                text(termsList[i].term, 70, y);
+            }
+            // Draw definitions on the right
+            for (let i = 0; i < definitionsList.length; i++) {
+                let y = 50 + i * 35;
+                // Set text color to green if part of a correct pair, black otherwise
+                fill(correctPairs.some(pair => pair.definition === i) ? [0, 255, 0] : [0, 0, 0]);
+                ellipse(750, y, 10, 10);
+                text(definitionsList[i].definition, 400, y, 340);
+            }
+            // Draw lines
+            for (let conn of connections) {
+                stroke(0); // Lines remain black
+                line(50, 50 + conn.term * 35, 750, 50 + conn.definition * 35);
+            }
+            // Draw current line being drawn
+            if (selectedTerm !== null) {
+                stroke(0, 0, 255); // Blue for the line being drawn
+                line(50, 50 + selectedTerm * 35, mouseX, mouseY);
+            }
+            // Update feedback
+            let feedback = document.getElementById('feedback');
+            feedback.textContent = `Matches: ${matchedPairs}/15`;
+            if (matchedPairs === 15) {
+                feedback.textContent = "Congratulations! All matches correct!";
+            }
+        }
+
+        function mousePressed() {
+            // Check left side (terms)
+            for (let i = 0; i < termsList.length; i++) {
+                let y = 50 + i * 35;
+                // Only allow selecting a term if it hasn't been connected yet
+                if (dist(mouseX, mouseY, 50, y) < 10 && !connections.some(pair => pair.term === i)) {
+                    selectedTerm = i;
+                    return;
+                }
+            }
+        }
+
+        function mouseReleased() {
+            if (selectedTerm !== null) {
+                // Check right side (definitions)
+                for (let i = 0; i < definitionsList.length; i++) {
+                    let y = 50 + i * 35;
+                    // Only allow connecting to a definition if it hasn't been connected yet
+                    if (dist(mouseX, mouseY, 750, y) < 10 && !connections.some(pair => pair.definition === i)) {
+                        // Check if the connection is correct by matching IDs
+                        if (termsList[selectedTerm].id === definitionsList[i].id) {
+                            connections.push({ term: selectedTerm, definition: i });
+                            correctPairs.push({ term: selectedTerm, definition: i });
+                            matchedPairs++;
+                        }
+                        // Do not add incorrect connections to the connections array
+                        break;
+                    }
+                }
+                selectedTerm = null;
+            }
+        }
+
+        function resetGame() {
+            connections = [];
+            correctPairs = [];
+            matchedPairs = 0;
+            shuffleWithNoAlignment(); // Shuffle terms and definitions with no alignment
+        }
+    </script>
+</body>
+</html>
